@@ -1,97 +1,164 @@
 --------------------------------------------------------------------------------
 --
---   FileName:         i2s_playback.vhd
---   Dependencies:     i2s_transceiver.vhd, clk_wiz_0 (PLL)
---   Design Software:  Vivado v2017.2
+--   filename:         i2s_playback.vhd
+--   dependencies:     i2s_transceiver.vhd, clk_wiz_0 (pll)
+--   design software:  vivado v2017.2
 --
---   HDL CODE IS PROVIDED "AS IS."  DIGI-KEY EXPRESSLY DISCLAIMS ANY
---   WARRANTY OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT
---   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
---   PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL DIGI-KEY
---   BE LIABLE FOR ANY INCIDENTAL, SPECIAL, INDIRECT OR CONSEQUENTIAL
---   DAMAGES, LOST PROFITS OR LOST DATA, HARM TO YOUR EQUIPMENT, COST OF
---   PROCUREMENT OF SUBSTITUTE GOODS, TECHNOLOGY OR SERVICES, ANY CLAIMS
---   BY THIRD PARTIES (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF),
---   ANY CLAIMS FOR INDEMNITY OR CONTRIBUTION, OR OTHER SIMILAR COSTS.
+--   hdl code is provided "as is."  digi-key expressly disclaims any
+--   warranty of any kind, whether express or implied, including but not
+--   limited to, the implied warranties of merchantability, fitness for a
+--   particular purpose, or non-infringement. in no event shall digi-key
+--   be liable for any incidental, special, indirect or consequential
+--   damages, lost profits or lost data, harm to your equipment, cost of
+--   procurement of substitute goods, technology or services, any claims
+--   by third parties (including but not limited to any defense thereof),
+--   any claims for indemnity or contribution, or other similar costs.
 --
---   Version History
---   Version 1.0 04/19/2019 Scott Larson
---     Initial Public Release
+--   version history
+--   version 1.0 04/19/2019 scott larson
+--     initial public release
 -- 
 --------------------------------------------------------------------------------
 
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+library ieee;
+use ieee.std_logic_1164.all;
 
-ENTITY i2s_playback IS
-    GENERIC(
-        d_width     :  INTEGER := 24);                    --data width
-    PORT(
-        clock       :  IN  STD_LOGIC;                     --system clock (100 MHz on Basys board)
-        reset_n     :  IN  STD_LOGIC;                     --active low asynchronous reset
-        mclk        :  OUT STD_LOGIC_VECTOR(1 DOWNTO 0);  --master clock
-        sclk        :  OUT STD_LOGIC_VECTOR(1 DOWNTO 0);  --serial clock (or bit clock)
-        ws          :  OUT STD_LOGIC_VECTOR(1 DOWNTO 0);  --word select (or left-right clock)
-        sd_rx       :  IN  STD_LOGIC;                     --serial data in
-        sd_tx       :  OUT STD_LOGIC);                    --serial data out
-END i2s_playback;
+entity i2s_playback is
+    generic(
+        d_width     :  integer := 24);                    --data width
+    port(
+        clk         :  in  std_logic;                     --system clock (12 mhz)
+        reset_n     :  in  std_logic;                     --active low asynchronous reset
+        mclk        :  out std_logic_vector(1 downto 0);  --master clock
+        sclk        :  out std_logic_vector(1 downto 0);  --serial clock (or bit clock)
+        ws          :  out std_logic_vector(1 downto 0);  --word select (or left-right clock)
+        sd_rx       :  in  std_logic;                     --serial data in
+        sd_tx       :  out std_logic);                    --serial data out
+end i2s_playback;
 
-ARCHITECTURE logic OF i2s_playback IS
+architecture logic of i2s_playback is
+    signal clkfb        :  std_logic;
+    signal master_clk   :  std_logic;                             --internal master clock signal
+    signal serial_clk   :  std_logic := '0';                      --internal serial clock signal
+    signal word_select  :  std_logic := '0';                      --internal word select signal
+    signal l_data_rx    :  std_logic_vector(d_width-1 downto 0);  --left channel data received from i2s transceiver component
+    signal r_data_rx    :  std_logic_vector(d_width-1 downto 0);  --right channel data received from i2s transceiver component
+    signal l_data_tx    :  std_logic_vector(d_width-1 downto 0);  --left channel data to transmit using i2s transceiver component
+    signal r_data_tx    :  std_logic_vector(d_width-1 downto 0);  --right channel data to transmit using i2s transceiver component
 
-    SIGNAL master_clk   :  STD_LOGIC;                             --internal master clock signal
-    SIGNAL serial_clk   :  STD_LOGIC := '0';                      --internal serial clock signal
-    SIGNAL word_select  :  STD_LOGIC := '0';                      --internal word select signal
-    SIGNAL l_data_rx    :  STD_LOGIC_VECTOR(d_width-1 DOWNTO 0);  --left channel data received from I2S Transceiver component
-    SIGNAL r_data_rx    :  STD_LOGIC_VECTOR(d_width-1 DOWNTO 0);  --right channel data received from I2S Transceiver component
-    SIGNAL l_data_tx    :  STD_LOGIC_VECTOR(d_width-1 DOWNTO 0);  --left channel data to transmit using I2S Transceiver component
-    SIGNAL r_data_tx    :  STD_LOGIC_VECTOR(d_width-1 DOWNTO 0);  --right channel data to transmit using I2S Transceiver component
- 
-    --declare PLL to create 11.29 MHz master clock from 100 MHz system clock
-    COMPONENT clk_wiz_0
-        PORT(
-            clk_in1     :  IN STD_LOGIC  := '0';
-            clk_out1    :  OUT STD_LOGIC);
-        END COMPONENT;
-
-    --declare I2S Transceiver component
-    COMPONENT i2s_transceiver IS
-        GENERIC(
-            mclk_sclk_ratio :  INTEGER := 4;    --number of mclk periods per sclk period
-            sclk_ws_ratio   :  INTEGER := 64;   --number of sclk periods per word select period
-            d_width         :  INTEGER := 24);  --data width
-        PORT(
-            reset_n     :  IN   STD_LOGIC;                              --asynchronous active low reset
-            mclk        :  IN   STD_LOGIC;                              --master clock
-            sclk        :  OUT  STD_LOGIC;                              --serial clock (or bit clock)
-            ws          :  OUT  STD_LOGIC;                              --word select (or left-right clock)
-            sd_tx       :  OUT  STD_LOGIC;                              --serial data transmit
-            sd_rx       :  IN   STD_LOGIC;                              --serial data receive
-            l_data_tx   :  IN   STD_LOGIC_VECTOR(d_width-1 DOWNTO 0);   --left channel data to transmit
-            r_data_tx   :  IN   STD_LOGIC_VECTOR(d_width-1 DOWNTO 0);   --right channel data to transmit
-            l_data_rx   :  OUT  STD_LOGIC_VECTOR(d_width-1 DOWNTO 0);   --left channel data received
-            r_data_rx   :  OUT  STD_LOGIC_VECTOR(d_width-1 DOWNTO 0));  --right channel data received
-    END COMPONENT;
+    --declare i2s transceiver component
+    component i2s_transceiver is
+        generic(
+            mclk_sclk_ratio :  integer := 4;    --number of mclk periods per sclk period
+            sclk_ws_ratio   :  integer := 64;   --number of sclk periods per word select period
+            d_width         :  integer := 24);  --data width
+        port(
+            reset_n     :  in   std_logic;                              --asynchronous active low reset
+            mclk        :  in   std_logic;                              --master clock
+            sclk        :  out  std_logic;                              --serial clock (or bit clock)
+            ws          :  out  std_logic;                              --word select (or left-right clock)
+            sd_tx       :  out  std_logic;                              --serial data transmit
+            sd_rx       :  in   std_logic;                              --serial data receive
+            l_data_tx   :  in   std_logic_vector(d_width-1 downto 0);   --left channel data to transmit
+            r_data_tx   :  in   std_logic_vector(d_width-1 downto 0);   --right channel data to transmit
+            l_data_rx   :  out  std_logic_vector(d_width-1 downto 0);   --left channel data received
+            r_data_rx   :  out  std_logic_vector(d_width-1 downto 0));  --right channel data received
+    end component;
     
-BEGIN
-
-    --instantiate PLL to create master clock
-    i2s_clock: clk_wiz_0 
-    PORT MAP(clk_in1 => clock, clk_out1 => master_clk);
-  
-    --instantiate I2S Transceiver component
+begin
+    --instantiate i2s transceiver component
     i2s_transceiver_0: i2s_transceiver
-    GENERIC MAP(mclk_sclk_ratio => 4, sclk_ws_ratio => 64, d_width => 24)
-    PORT MAP(reset_n => reset_n, mclk => master_clk, sclk => serial_clk, ws => word_select, sd_tx => sd_tx, sd_rx => sd_rx,
+    generic map(mclk_sclk_ratio => 4, sclk_ws_ratio => 64, d_width => 24)
+    port map(reset_n => reset_n, mclk => master_clk, sclk => serial_clk, ws => word_select, sd_tx => sd_tx, sd_rx => sd_rx,
              l_data_tx => l_data_tx, r_data_tx => r_data_tx, l_data_rx => l_data_rx, r_data_rx => r_data_rx);
-  
-    mclk(0) <= master_clk;  --output master clock to ADC
-    mclk(1) <= master_clk;  --output master clock to DAC
-    sclk(0) <= serial_clk;  --output serial clock (from I2S Transceiver) to ADC
-    sclk(1) <= serial_clk;  --output serial clock (from I2S Transceiver) to DAC
-    ws(0) <= word_select;   --output word select (from I2S Transceiver) to ADC
-    ws(1) <= word_select;   --output word select (from I2S Transceiver) to DAC
+    
+    ------------------------------------------------------------------
+	-- CLOCK MANAGEMENT TILE
+	--
+	-- INPUT CLOCK: 12 MHZ
+	-- OUTPUT CLOCK: 11.29 MHZ
+	--
+	-- CLKFBOUT_MULT_F: 47.04
+	-- CLKOUT0_DIVIDE_F: 50
+	-- DIVCLK_DIVIDE: 1
+	------------------------------------------------------------------
+	CMT: MMCME2_BASE GENERIC MAP (
+		-- JITTER PROGRAMMING (OPTIMIZED, HIGH, LOW)
+		BANDWIDTH=>"OPTIMIZED",
+		-- MULTIPLY VALUE FOR ALL CLKOUT (2.000-64.000).
+		CLKFBOUT_MULT_F=>47.04,
+		-- PHASE OFFSET IN DEGREES OF CLKFB (-360.000-360.000).
+		CLKFBOUT_PHASE=>0.0,
+		-- INPUT CLOCK PERIOD IN NS TO PS RESOLUTION (I.E. 33.333 IS 30 MHZ).
+		CLKIN1_PERIOD=>83.333,
+		-- DIVIDE AMOUNT FOR EACH CLKOUT (1-128)
+		CLKOUT1_DIVIDE=>1,
+		CLKOUT2_DIVIDE=>1,
+		CLKOUT3_DIVIDE=>1,
+		CLKOUT4_DIVIDE=>1,
+		CLKOUT5_DIVIDE=>1,
+		CLKOUT6_DIVIDE=>1,
+		-- DIVIDE AMOUNT FOR CLKOUT0 (1.000-128.000):
+		CLKOUT0_DIVIDE_F=>50,
+		-- DUTY CYCLE FOR EACH CLKOUT (0.01-0.99):
+		CLKOUT0_DUTY_CYCLE=>0.5,
+		CLKOUT1_DUTY_CYCLE=>0.5,
+		CLKOUT2_DUTY_CYCLE=>0.5,
+		CLKOUT3_DUTY_CYCLE=>0.5,
+		CLKOUT4_DUTY_CYCLE=>0.5,
+		CLKOUT5_DUTY_CYCLE=>0.5,
+		CLKOUT6_DUTY_CYCLE=>0.5,
+		-- PHASE OFFSET FOR EACH CLKOUT (-360.000-360.000):
+		CLKOUT0_PHASE=>0.0,
+		CLKOUT1_PHASE=>0.0,
+		CLKOUT2_PHASE=>0.0,
+		CLKOUT3_PHASE=>0.0,
+		CLKOUT4_PHASE=>0.0,
+		CLKOUT5_PHASE=>0.0,
+		CLKOUT6_PHASE=>0.0,
+		-- CASCADE CLKOUT4 COUNTER WITH CLKOUT6 (FALSE, TRUE)
+		CLKOUT4_CASCADE=>FALSE,
+		-- MASTER DIVISION VALUE (1-106)
+		DIVCLK_DIVIDE=>1,
+		-- REFERENCE INPUT JITTER IN UI (0.000-0.999).
+		REF_JITTER1=>0.0,
+		-- DELAYS DONE UNTIL MMCM IS LOCKED (FALSE, TRUE)
+		STARTUP_WAIT=>FALSE
+	) PORT MAP (
+		-- USER CONFIGURABLE CLOCK OUTPUTS:
+		CLKOUT0=>master_clk,  -- 1-BIT OUTPUT: CLKOUT0
+		CLKOUT0B=>OPEN,  -- 1-BIT OUTPUT: INVERTED CLKOUT0
+		CLKOUT1=>OPEN,   -- 1-BIT OUTPUT: CLKOUT1
+		CLKOUT1B=>OPEN,  -- 1-BIT OUTPUT: INVERTED CLKOUT1
+		CLKOUT2=>OPEN,   -- 1-BIT OUTPUT: CLKOUT2
+		CLKOUT2B=>OPEN,  -- 1-BIT OUTPUT: INVERTED CLKOUT2
+		CLKOUT3=>OPEN,   -- 1-BIT OUTPUT: CLKOUT3
+		CLKOUT3B=>OPEN,  -- 1-BIT OUTPUT: INVERTED CLKOUT3
+		CLKOUT4=>OPEN,   -- 1-BIT OUTPUT: CLKOUT4
+		CLKOUT5=>OPEN,   -- 1-BIT OUTPUT: CLKOUT5
+		CLKOUT6=>OPEN,   -- 1-BIT OUTPUT: CLKOUT6
+		-- CLOCK FEEDBACK OUTPUT PORTS:
+		CLKFBOUT=>clkfb,-- 1-BIT OUTPUT: FEEDBACK CLOCK
+		CLKFBOUTB=>OPEN, -- 1-BIT OUTPUT: INVERTED CLKFBOUT
+		-- MMCM STATUS PORTS:
+		LOCKED=>OPEN,    -- 1-BIT OUTPUT: LOCK
+		-- CLOCK INPUT:
+		CLKIN1=>CLK,   -- 1-BIT INPUT: CLOCK
+		-- MMCM CONTROL PORTS:
+		PWRDWN=>'0',     -- 1-BIT INPUT: POWER-DOWN
+		RST=>'0',        -- 1-BIT INPUT: RESET
+		-- CLOCK FEEDBACK INPUT PORT:
+		CLKFBIN=>clkfb  -- 1-BIT INPUT: FEEDBACK CLOCK
+	);
+
+    mclk(0) <= master_clk;  --output master clock to adc
+    mclk(1) <= master_clk;  --output master clock to dac
+    sclk(0) <= serial_clk;  --output serial clock (from i2s transceiver) to adc
+    sclk(1) <= serial_clk;  --output serial clock (from i2s transceiver) to dac
+    ws(0) <= word_select;   --output word select (from i2s transceiver) to adc
+    ws(1) <= word_select;   --output word select (from i2s transceiver) to dac
 
     r_data_tx <= r_data_rx;  --assign right channel received data to transmit (to playback out received data)
     l_data_tx <= l_data_rx;  --assign left channel received data to transmit (to playback out received data)
 
-END logic;
+end logic;
