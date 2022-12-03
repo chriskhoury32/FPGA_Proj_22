@@ -5,9 +5,8 @@ use IEEE.numeric_std.all;
 entity filter_select is
     port(
         clk:          in  std_logic;
-        lowpass_sel:  in  std_logic;
-        highpass_sel: in  std_logic;
-        knob_val:     in  unsigned(3 downto 0);
+        pass_toggle:  in  std_logic;
+        cutoff_inc:   in  std_logic;
         idx:          in  unsigned(9 downto 0);
         data:         out signed(17 downto 0)
     );
@@ -26,21 +25,22 @@ architecture arch of filter_select is
 
     signal addr: std_logic_vector(14 downto 0);
 
-    signal pass:     pass_type := highpass;
-    signal pass_bit: std_logic;
+    signal pass_bit: std_logic := '0';  -- '0' - lowpass; '1' - highpass
+    signal cutoff:   unsigned(3 downto 0) := b"0000";
 begin
     ft: filter_table port map(clk=>clk, addr=>addr, data=>data);
     
     pass_bit <= '1' when pass = highpass else '0';
-    addr <= pass_bit & std_logic_vector(knob_val) & std_logic_vector(idx);
+    addr <= pass_bit & std_logic_vector(cutoff) & std_logic_vector(idx);
 
     process(clk)
     begin
         if rising_edge(clk) then
-            if lowpass_sel = '1' then
-                pass <= lowpass;
-            elsif highpass_sel = '1' then
-                pass <= highpass;
+            if pass_toggle = '1' then
+                pass_bit <= not pass_bit;
+            end if;
+            if cutoff_inc = '1' then
+                cutoff <= cutoff + 1;
             end if;
         end if;
     end process;
