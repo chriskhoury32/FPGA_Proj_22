@@ -7,11 +7,9 @@ use UNISIM.vcomponents.all;
 entity filter is
     -- generic (    );
     port (
-        clk:    in std_logic; --input clock
+        clk:      in std_logic; --input clock
         s_trig:   in std_logic; --trigger to start filtering
-        ufa_addr: in std_logic_vector; --block RAM address of unfiltered audio signal values
-        f_addr: in std_logic_vector; --block RAM address of filter coefficients
-        fa_addr:  out std_logic_vector; --block RAM address of filtered audio signal values
+        f_audio:  out signed(23 downto 0); --filtered audio signal value
         f_trig:   out std_logic --trigger to indicate the filtering is finished
     );
 end filter;
@@ -24,26 +22,34 @@ architecture arch of filter is
             highpass_sel: in  std_logic;
             knob_val:     in  unsigned(3 downto 0);
             idx:          in  unsigned(9 downto 0);
-            data:         out signed(17 downto 0);
+            data:         out signed(17 downto 0)
+        );
+    end component;
+    component unfiltered_audio is
+        port(
+            clk:          in std_logic;
+            addr:         in unsigned(14 downto 0);
+            data:         out signed(23 downto 0)
         );
     end component;
 
 --Begin Signal Declarations
 type filter_FSM is      (filter_idle,filter_active,filter_end)
 signal filter_state:    filter_FSM:=filter_idle;
-signal data:            signed(17 downto 0);
-signal data_24b:        signed (23 downto 0);
+signal lowpass_sel:     std_logic;
+signal highpass_sel:    std_logic;
+signal knob_val:        unsigned(3 downto 0);
+signal coeff:           signed(17 downto 0);    -- value of FIR coefficient
+signal coeff_addr:      unsigned(9 downto 0);   -- address of coefficient RAM
+signal uf_addr:         unsigned (14 downto 0); -- address of unfiltered audio RAM
+signal uf_audio:        signed(23 downto 0);    -- value of unfiltered audio
+signal fir_sum:         signed(51 downto 0);
 --End Signal Declarations
 
 begin
-    ft: filter_table port map(clk=>clk,addr=>addr,data=>data);
     fs: filter_select port map(clk=>clk,lowpass_sel=>lowpass_sel,highpass_sel=>highpass_sel,
-                                knob_val=>knob_val,idx=>idx,data=>data,f_addr=>f_addr);
-
-process(clk)
-begin
-    data_24b<=signed(b"000000"&std_logic_vector(data));
-end process;
+                                knob_val=>knob_val,idx=>coeff_addr,data=>coeff);
+    ufa: unfiltered_audio port map(clk=>clk,addr=>uf_addr,data=>uf_audio);
 
 process(clk)
 begin
@@ -54,10 +60,25 @@ begin
                 f_trig<='0';
                 if (s_trig='1')
                 then
+                    coeff_addr<=to_unsigned(0,10);
+                    uf_addr<=to_unsigned(0,15);
+                    fir_sum<=to_signed(0,41);
                     filter_state<=filter_active;
+                else
+                    filter_state<=filter_idle;
                 end if;
             when filter_active =>
-                
+                if (coeff_addr=to_unsigned(1023,10) and uf_addr=to_unsigned(1023,15))
+                then
+                    coeff_addr<=to_unsigned(0,10);
+                    uf_addr<=to_unsigned(0,15);
+                    filter_state<=filter_end;
+                else
+                    fir_sum<=signed(b"00_0000_0000"&(coeff * uf_audio)) + fir_sum;
+                    coeff_addr<=coeff_addr+1;
+                    uf_addr<=uf_addr+1;
+                    filter_state<=filter_active;
+                end if;
             when filter_end =>
                 filter_state<=filter_idle;
                 f_trig<='1';
