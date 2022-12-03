@@ -20,15 +20,17 @@
 -- 
 --------------------------------------------------------------------------------
 
-library ieee;
-use ieee.std_logic_1164.all;
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+library UNISIM;
+use UNISIM.vcomponents.all;
 
 entity i2s_playback is
     generic(
         d_width     :  integer := 24);                    --data width
     port(
         clk         :  in  std_logic;                     --system clock (12 mhz)
-        reset_n     :  in  std_logic;                     --active low asynchronous reset
         mclk        :  out std_logic_vector(1 downto 0);  --master clock
         sclk        :  out std_logic_vector(1 downto 0);  --serial clock (or bit clock)
         ws          :  out std_logic_vector(1 downto 0);  --word select (or left-right clock)
@@ -45,6 +47,7 @@ architecture logic of i2s_playback is
     signal r_data_rx    :  std_logic_vector(d_width-1 downto 0);  --right channel data received from i2s transceiver component
     signal l_data_tx    :  std_logic_vector(d_width-1 downto 0);  --left channel data to transmit using i2s transceiver component
     signal r_data_tx    :  std_logic_vector(d_width-1 downto 0);  --right channel data to transmit using i2s transceiver component
+	signal reset_n		:  std_logic:='1';
 
     --declare i2s transceiver component
     component i2s_transceiver is
@@ -76,17 +79,20 @@ begin
 	-- CLOCK MANAGEMENT TILE
 	--
 	-- INPUT CLOCK: 12 MHZ
-	-- OUTPUT CLOCK: 11.29 MHZ
+	-- OUTPUT CLOCK: 22.57 MHZ
 	--
-	-- CLKFBOUT_MULT_F: 47.04
-	-- CLKOUT0_DIVIDE_F: 50
+	-- Fvco = Fclkin * CLKFBOUT_MULT_F / DIVCLK_DIVIDE
+	-- Fout0 = Fvco / CLKOUT0_DIVIDE_F
+	--
+	-- CLKFBOUT_MULT_F: 52.000
+	-- CLKOUT0_DIVIDE_F: 27.647
 	-- DIVCLK_DIVIDE: 1
 	------------------------------------------------------------------
 	CMT: MMCME2_BASE GENERIC MAP (
 		-- JITTER PROGRAMMING (OPTIMIZED, HIGH, LOW)
 		BANDWIDTH=>"OPTIMIZED",
 		-- MULTIPLY VALUE FOR ALL CLKOUT (2.000-64.000).
-		CLKFBOUT_MULT_F=>47.04,
+		CLKFBOUT_MULT_F=>52.000,
 		-- PHASE OFFSET IN DEGREES OF CLKFB (-360.000-360.000).
 		CLKFBOUT_PHASE=>0.0,
 		-- INPUT CLOCK PERIOD IN NS TO PS RESOLUTION (I.E. 33.333 IS 30 MHZ).
@@ -99,7 +105,7 @@ begin
 		CLKOUT5_DIVIDE=>1,
 		CLKOUT6_DIVIDE=>1,
 		-- DIVIDE AMOUNT FOR CLKOUT0 (1.000-128.000):
-		CLKOUT0_DIVIDE_F=>50,
+		CLKOUT0_DIVIDE_F=>27.625,
 		-- DUTY CYCLE FOR EACH CLKOUT (0.01-0.99):
 		CLKOUT0_DUTY_CYCLE=>0.5,
 		CLKOUT1_DUTY_CYCLE=>0.5,
