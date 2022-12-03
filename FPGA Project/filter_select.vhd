@@ -33,4 +33,15 @@ begin
     
     pass_bit <= '1' when pass = highpass else '0';
     addr <= pass_bit & std_logic_vector(knob_val) & std_logic_vector(idx);
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if lowpass_sel = '1' then
+                pass <= lowpass;
+            elsif highpass_sel = '1' then
+                pass <= highpass;
+            end if;
+        end if;
+    end process;
 end arch;
