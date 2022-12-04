@@ -8,6 +8,8 @@ entity filter is
     -- generic (    );
     port (
         clk:      in std_logic; --input clock
+        toggle_btn:  in  std_logic;
+        cutoff_btn:   in  std_logic;
         s_trig:   in std_logic; --trigger to start filtering
         uf_audio: in signed(23 downto 0);  --unfiltered audio to write to RAM
         f_audio:  out signed(23 downto 0); --filtered audio signal value
@@ -19,9 +21,8 @@ architecture arch of filter is
     component filter_select is
         port(
             clk:          in  std_logic;
-            lowpass_sel:  in  std_logic;
-            highpass_sel: in  std_logic;
-            knob_val:     in  unsigned(3 downto 0);
+            pass_toggle:  in  std_logic;
+            cutoff_inc:   in  std_logic;
             idx:          in  unsigned(9 downto 0);
             data:         out signed(17 downto 0)
         );
@@ -65,7 +66,7 @@ signal start_addr:  unsigned(9 downto 0):=b"00_0000_0000";
 --End Signal Declarations
 
 begin
-    fs: filter_select port map(clk=>clk,lowpass_sel=>lowpass_sel,highpass_sel=>highpass_sel,
+    fs: filter_select port map(clk=>clk,pass_toggle=>toggle_btn,cutoff_inc=>cutoff_btn,
                                 knob_val=>knob_val,idx=>coeff_addr,data=>coeff);
     ufa: unfiltered_audio port map(clka_i=>clk,wea_i=>'0',addra_i=>std_logic_vector(uf_addr),dataa_i=>(others=>'0'),
                                     dataa_o=>dataa,clkb_i=>clk,web_i=>web_s,addrb_i=>std_logic_vector(uf_addr),

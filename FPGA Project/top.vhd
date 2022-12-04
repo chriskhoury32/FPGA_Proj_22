@@ -6,8 +6,8 @@ use UNISIM.vcomponents.all;
 
 entity top is
     port(
-        clk: in std_logic;                     --system clock (12 mhz)
-
+        clk: in std_logic;                        --system clock (12 mhz)
+        btn: in  std_logic_vector(1 downto 0);    --buttons
         mclk:  out std_logic_vector(1 downto 0);  --master clock
         sclk:  out std_logic_vector(1 downto 0);  --serial clock (or bit clock)
         ws:    out std_logic_vector(1 downto 0);  --word select (or left-right clock)
@@ -47,6 +47,8 @@ architecture arch of top is
     signal clkf:    std_logic;
     signal clkfb:   std_logic;
     signal counter: unsigned(10 downto 0);
+    signal btn0_tmp:   std_logic_vector(3 downto 0);
+    signal btn1_tmp:   std_logic_vector(3 downto 0);
 
     signal s_trig:     std_logic := '0';
     signal r_audio_i:  std_logic_vector(23 downto 0);
@@ -65,12 +67,12 @@ begin
         r_data_o=>r_audio_o(3), l_data_o=>l_audio_o(3)
     );
     r_filt: filter port map(
-        clk=>clkf, s_trig=>s_trig, uf_audio=>r_uf_audio,
-        f_audio=>r_f_audio, f_trig=>open
+        clk=>clkf, toggle_btn=>btn0, cutoff_btn=>btn1, s_trig=>s_trig, 
+        uf_audio=>r_uf_audio,f_audio=>r_f_audio, f_trig=>open
     );
     l_filt: filter port map(
-        clk=>clkf, s_trig=>s_trig, uf_audio=>l_uf_audio,
-        f_audio=>l_f_audio, f_trig=>open
+        clk=>clkf, toggle_btn=>btn0, cutoff_btn=>btn1, s_trig=>s_trig, 
+        uf_audio=>r_uf_audio,f_audio=>r_f_audio, f_trig=>open
     );
 
     r_uf_audio <= signed(r_audio_i);
@@ -78,6 +80,23 @@ begin
 
     l_uf_audio <= signed(l_audio_i);
     l_audio_o(0) <= std_logic_vector(l_f_audio);
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+			btn0<=btn0_temp(2) and (not btn0_temp(3));
+			btn0_temp(0)<=btn(0);
+			btn0_temp(1)<=btn0_temp(0);
+			btn0_temp(2)<=btn0_temp(1);
+			btn0_temp(3)<=btn0_temp(2);
+
+            btn1<=btn1_temp(2) and (not btn1_temp(3));
+			btn1_temp(0)<=btn(1);
+			btn1_temp(1)<=btn1_temp(0);
+			btn1_temp(2)<=btn1_temp(1);
+			btn1_temp(3)<=btn1_temp(2);
+        end if;
+    end process;
 
     process(clk)
     begin
