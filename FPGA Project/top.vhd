@@ -1,4 +1,10 @@
-entity top
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+library UNISIM;
+use UNISIM.vcomponents.all;
+
+entity top is
     port(
         clk: in std_logic;                     --system clock (12 mhz)
 
@@ -20,10 +26,10 @@ architecture arch of top is
             sd_rx: in  std_logic;                     --serial data in
             sd_tx: out std_logic;                     --serial data out
 
-            r_audio_i: in  std_logic_vector(23 downto 0);
-            l_audio_i: in  std_logic_vector(23 downto 0);
-            r_audio_o: out std_logic_vector(23 downto 0);
-            l_audio_o: out std_logic_vector(23 downto 0);
+            r_data_i: in  std_logic_vector(23 downto 0);
+            l_data_i: in  std_logic_vector(23 downto 0);
+            r_data_o: out std_logic_vector(23 downto 0);
+            l_data_o: out std_logic_vector(23 downto 0)
         );
     end component;
     component filter

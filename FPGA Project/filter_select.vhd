@@ -22,7 +22,7 @@ architecture arch of filter_select is
     end component;
 
     type pass_type is (highpass, lowpass);
-
+    signal pass: pass_type;
     signal addr: std_logic_vector(14 downto 0);
 
     signal pass_bit: std_logic := '0';  -- '0' - lowpass; '1' - highpass
@@ -30,7 +30,7 @@ architecture arch of filter_select is
 begin
     ft: filter_table port map(clk=>clk, addr=>addr, data=>data);
     
-    pass_bit <= '1' when pass = highpass else '0';
+    pass_bit <= '1' when (pass=highpass) else '0';
     addr <= pass_bit & std_logic_vector(cutoff) & std_logic_vector(idx);
 
     process(clk)
