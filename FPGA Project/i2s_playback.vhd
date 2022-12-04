@@ -35,12 +35,12 @@ entity i2s_playback is
         sclk        :  out std_logic_vector(1 downto 0);  --serial clock (or bit clock)
         ws          :  out std_logic_vector(1 downto 0);  --word select (or left-right clock)
         sd_rx       :  in  std_logic;                     --serial data in
-        sd_tx       :  out std_logic                      --serial data out
+        sd_tx       :  out std_logic;                      --serial data out
 
-		r_audio_i: in  std_logic_vector(d_width-1 downto 0);
-		l_audio_i: in  std_logic_vector(d_width-1 downto 0);
-		r_audio_o: out std_logic_vector(d_width-1 downto 0);
-		l_audio_o: out std_logic_vector(d_width-1 downto 0);
+		r_data_i: in  std_logic_vector(d_width-1 downto 0);
+		l_data_i: in  std_logic_vector(d_width-1 downto 0);
+		r_data_o: out std_logic_vector(d_width-1 downto 0);
+		l_data_o: out std_logic_vector(d_width-1 downto 0)
 	);
 end i2s_playback;
 
@@ -55,15 +55,18 @@ architecture logic of i2s_playback is
     signal r_data_tx    :  std_logic_vector(d_width-1 downto 0);  --right channel data to transmit using i2s transceiver component
 	signal reset_n		:  std_logic:='1';
 
-	signal r_audio_i_d: array(0 to 2) of std_logic_vector(d_width-1 downto 0);
-	signal l_audio_i_d: array(0 to 2) of std_logic_vector(d_width-1 downto 0);
+	type r_audio_i_d is array(0 to 2) of std_logic_vector(d_width-1 downto 0);
+	type l_audio_i_d is array(0 to 2) of std_logic_vector(d_width-1 downto 0);
+	signal r_data_i_d: r_audio_i_d;
+	signal l_data_i_d: l_audio_i_d;
 
     --declare i2s transceiver component
     component i2s_transceiver is
         generic(
             mclk_sclk_ratio :  integer := 4;    --number of mclk periods per sclk period
             sclk_ws_ratio   :  integer := 64;   --number of sclk periods per word select period
-            d_width         :  integer := 24);  --data width
+            d_width         :  integer := 24
+		);  --data width
         port(
             reset_n     :  in   std_logic;                              --asynchronous active low reset
             mclk        :  in   std_logic;                              --master clock
@@ -74,7 +77,8 @@ architecture logic of i2s_playback is
             l_data_tx   :  in   std_logic_vector(d_width-1 downto 0);   --left channel data to transmit
             r_data_tx   :  in   std_logic_vector(d_width-1 downto 0);   --right channel data to transmit
             l_data_rx   :  out  std_logic_vector(d_width-1 downto 0);   --left channel data received
-            r_data_rx   :  out  std_logic_vector(d_width-1 downto 0));  --right channel data received
+            r_data_rx   :  out  std_logic_vector(d_width-1 downto 0)
+		);  --right channel data received
     end component;
     
 begin
