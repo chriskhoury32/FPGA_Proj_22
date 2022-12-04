@@ -20,10 +20,10 @@ architecture arch of top is
             sd_rx: in  std_logic;                     --serial data in
             sd_tx: out std_logic;                     --serial data out
 
-            l_audio_i:  in  std_logic_vector(23 downto 0);
-            r_audio_i:  in  std_logic_vector(23 downto 0);
-            l_audio_o:  out std_logic_vector(23 downto 0);
-            r_audio_o:  out std_logic_vector(23 downto 0);
+            r_audio_i: in  std_logic_vector(23 downto 0);
+            l_audio_i: in  std_logic_vector(23 downto 0);
+            r_audio_o: out std_logic_vector(23 downto 0);
+            l_audio_o: out std_logic_vector(23 downto 0);
         );
     end component;
     component filter
@@ -37,13 +37,14 @@ architecture arch of top is
     end component;
 
     signal clkf:    std_logic;
+    signal clkfb:   std_logic;
     signal counter: unsigned(10 downto 0);
 
     signal s_trig:     std_logic := '0';
     signal r_audio_i:  std_logic_vector(23 downto 0);
     signal l_audio_i:  std_logic_vector(23 downto 0);
-    signal r_audio_o:  std_logic_vector(23 downto 0);
-    signal l_audio_o:  std_logic_vector(23 downto 0);
+    signal r_audio_o:  array(0 to 3) of std_logic_vector(23 downto 0);
+    signal l_audio_o:  array(0 to 3) of std_logic_vector(23 downto 0);
     signal r_uf_audio: signed(23 downto 0);
     signal l_uf_audio: signed(23 downto 0);
     signal r_f_audio:  signed(23 downto 0);
@@ -53,7 +54,7 @@ begin
         clk=>clkf, mclk=>mclk, sclk=>sclk,
         ws=>ws, sd_rx=>sd_rx, sd_tx=>sd_tx,
         r_audio_i=>r_audio_i, l_audio_i=>l_audio_i,
-        r_audio_o=>r_audio_o, l_audio_o=>l_audio_o
+        r_audio_o=>r_audio_o(3), l_audio_o=>l_audio_o(3)
     );
     r_filt: filter port map(
         clk=>clkf, s_trig=>s_trig, uf_audio=>r_uf_audio,
@@ -64,8 +65,11 @@ begin
         f_audio=>l_f_audio, f_trig=>open
     );
 
-    uf_audio <= std_logic_vector(audio_i);
-    f_audio <= signed(audio_o);
+    r_uf_audio <= std_logic_vector(r_audio_i);
+    r_audio_o(0) <= signed(r_f_audio);
+
+    l_uf_audio <= std_logic_vector(l_audio_i);
+    l_audio_o(0) <= signed(l_f_audio);
 
     process(begin)
         if rising_edge(clkf) then
@@ -76,6 +80,14 @@ begin
                 counter <= counter + 1;
                 s_trig <= '0';
             end if;
+        end if;
+    end process;
+
+    process(clk)
+    begin
+        if rising_edge(clkf) then
+            r_audio_o(1 to 3) <= r_audio_o(0 to 2);
+            l_audio_o(1 to 3) <= l_audio_o(0 to 2);
         end if;
     end process;
 

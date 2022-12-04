@@ -35,7 +35,13 @@ entity i2s_playback is
         sclk        :  out std_logic_vector(1 downto 0);  --serial clock (or bit clock)
         ws          :  out std_logic_vector(1 downto 0);  --word select (or left-right clock)
         sd_rx       :  in  std_logic;                     --serial data in
-        sd_tx       :  out std_logic);                    --serial data out
+        sd_tx       :  out std_logic                      --serial data out
+
+		r_audio_i: in  std_logic_vector(d_width-1 downto 0);
+		l_audio_i: in  std_logic_vector(d_width-1 downto 0);
+		r_audio_o: out std_logic_vector(d_width-1 downto 0);
+		l_audio_o: out std_logic_vector(d_width-1 downto 0);
+	);
 end i2s_playback;
 
 architecture logic of i2s_playback is
@@ -48,6 +54,9 @@ architecture logic of i2s_playback is
     signal l_data_tx    :  std_logic_vector(d_width-1 downto 0);  --left channel data to transmit using i2s transceiver component
     signal r_data_tx    :  std_logic_vector(d_width-1 downto 0);  --right channel data to transmit using i2s transceiver component
 	signal reset_n		:  std_logic:='1';
+
+	signal r_audio_i_d: array(0 to 2) of std_logic_vector(d_width-1 downto 0);
+	signal l_audio_i_d: array(0 to 2) of std_logic_vector(d_width-1 downto 0);
 
     --declare i2s transceiver component
     component i2s_transceiver is
@@ -164,7 +173,19 @@ begin
     ws(0) <= word_select;   --output word select (from i2s transceiver) to adc
     ws(1) <= word_select;   --output word select (from i2s transceiver) to dac
 
-    r_data_tx <= r_data_rx;  --assign right channel received data to transmit (to playback out received data)
-    l_data_tx <= l_data_rx;  --assign left channel received data to transmit (to playback out received data)
+    r_data_o <= r_data_rx;  --assign right channel received data to transmit (to playback out received data)
+    l_data_o <= l_data_rx;  --assign left channel received data to transmit (to playback out received data)
 
+	process(master_clk)
+	begin
+		if rising_edge(master_clk) then
+			r_data_i_d(0) <= r_data_i;
+			r_data_i_d(1 to 2) <= r_data_i_d(0 to 1);
+			r_data_tx <= r_data_i_d(2);
+
+			l_data_i_d(0) <= l_data_i;
+			l_data_i_d(1 to 2) <= l_data_i_d(0 to 1);
+			l_data_tx <= l_data_i_d(2);
+		end if;
+	end process;
 end logic;
