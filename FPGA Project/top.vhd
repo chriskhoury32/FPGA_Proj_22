@@ -41,6 +41,8 @@ architecture arch of top is
             f_trig:   out std_logic --trigger to indicate the filtering is finished
         );
     end component;
+    
+    type synchronizer is array(0 to 3) of std_logic_vector(23 downto 0);
 
     signal clkf:    std_logic;
     signal clkfb:   std_logic;
@@ -49,8 +51,8 @@ architecture arch of top is
     signal s_trig:     std_logic := '0';
     signal r_audio_i:  std_logic_vector(23 downto 0);
     signal l_audio_i:  std_logic_vector(23 downto 0);
-    signal r_audio_o:  array(0 to 3) of std_logic_vector(23 downto 0);
-    signal l_audio_o:  array(0 to 3) of std_logic_vector(23 downto 0);
+    signal r_audio_o:  synchronizer;
+    signal l_audio_o:  synchronizer;
     signal r_uf_audio: signed(23 downto 0);
     signal l_uf_audio: signed(23 downto 0);
     signal r_f_audio:  signed(23 downto 0);
@@ -59,8 +61,8 @@ begin
     playback: i2s_playback port map(
         clk=>clkf, mclk=>mclk, sclk=>sclk,
         ws=>ws, sd_rx=>sd_rx, sd_tx=>sd_tx,
-        r_audio_i=>r_audio_i, l_audio_i=>l_audio_i,
-        r_audio_o=>r_audio_o(3), l_audio_o=>l_audio_o(3)
+        r_data_i=>r_audio_i, l_data_i=>l_audio_i,
+        r_data_o=>r_audio_o(3), l_data_o=>l_audio_o(3)
     );
     r_filt: filter port map(
         clk=>clkf, s_trig=>s_trig, uf_audio=>r_uf_audio,
@@ -71,13 +73,14 @@ begin
         f_audio=>l_f_audio, f_trig=>open
     );
 
-    r_uf_audio <= std_logic_vector(r_audio_i);
-    r_audio_o(0) <= signed(r_f_audio);
+    r_uf_audio <= signed(r_audio_i);
+    r_audio_o(0) <= std_logic_vector(r_f_audio);
 
-    l_uf_audio <= std_logic_vector(l_audio_i);
-    l_audio_o(0) <= signed(l_f_audio);
+    l_uf_audio <= signed(l_audio_i);
+    l_audio_o(0) <= std_logic_vector(l_f_audio);
 
-    process(begin)
+    process(clk)
+    begin
         if rising_edge(clkf) then
             if counter = to_unsigned(2000-1, counter'length) then
                 counter <= to_unsigned(0, counter'length);
