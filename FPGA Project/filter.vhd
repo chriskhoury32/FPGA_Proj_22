@@ -42,7 +42,7 @@ architecture arch of filter is
     end component;
 
 --Begin Signal Declarations
-type filter_FSM is      (filter_idle,filter_write,filter_read,filter_end)
+type filter_FSM is      (filter_idle,filter_write,filter_read,filter_end);
 signal filter_state:    filter_FSM:=filter_idle;
 signal lowpass_sel:     std_logic;
 signal highpass_sel:    std_logic;
@@ -59,6 +59,7 @@ signal uf_addr: unsigned(9 downto 0):=b"00_0000_0000";
 signal datab: std_logic_vector(35 downto 0);
 signal amp:	  std_logic:='0';
 signal web_s: std_logic;
+signal uf_audio_w: std_logic_vector(35 downto 0);    -- value of unfiltered audio (write)
 
 signal start_addr:  unsigned(9 downto 0):=b"00_0000_0000";
 --End Signal Declarations
@@ -66,9 +67,9 @@ signal start_addr:  unsigned(9 downto 0):=b"00_0000_0000";
 begin
     fs: filter_select port map(clk=>clk,lowpass_sel=>lowpass_sel,highpass_sel=>highpass_sel,
                                 knob_val=>knob_val,idx=>coeff_addr,data=>coeff);
-    ufa: unfiltered_audio port map(clka_i=>clk,wea_i=>'0',addra_i=>uf_addr,dataa_i=>(others=>'0'),dataa_o=>dataa,
-                            clkb_i=>clk,web_i=>web_s,addrb_i=>std_logic_vector(uf_addr),datab_i=>uf_audio_w,
-                            datab_o=>open);
+    ufa: unfiltered_audio port map(clka_i=>clk,wea_i=>'0',addra_i=>std_logic_vector(uf_addr),dataa_i=>(others=>'0'),
+                                    dataa_o=>dataa,clkb_i=>clk,web_i=>web_s,addrb_i=>std_logic_vector(uf_addr),
+                                    datab_i=>uf_audio_w,datab_o=>open);
 
     uf_audio_r<=signed(dataa(23 downto 0));
     uf_audio_w(35 downto 24)<=b"0000_0000_0000";
