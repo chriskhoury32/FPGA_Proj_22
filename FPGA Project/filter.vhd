@@ -86,7 +86,7 @@ begin
                 if (s_trig='1')
                 then
                     coeff_addr<=b"00_0000_0000";
-                    fir_sum<=to_signed(0,51);
+                    fir_sum<=to_signed(0,52);
                     filter_state<=filter_write;
                 else
                     filter_state<=filter_idle;
