@@ -8,6 +8,7 @@ entity filter_select is
         pass_toggle:  in  std_logic;
         cutoff_inc:   in  std_logic;
         idx:          in  unsigned(9 downto 0);
+        cutoff_leds:  out std_logic_vector(3 downto 0);
         data:         out signed(17 downto 0)
     );
 end filter_select;
@@ -28,6 +29,7 @@ architecture arch of filter_select is
 begin
     ft: filter_table port map(clk=>clk, addr=>addr, data=>data);
     
+    cutoff_leds<=std_logic_vector(cutoff);
     addr <= pass_bit & std_logic_vector(cutoff) & std_logic_vector(idx);
 
     process(clk)
@@ -37,7 +39,11 @@ begin
                 pass_bit <= not pass_bit;
             end if;
             if cutoff_inc = '1' then
-                cutoff <= cutoff + 1;
+                if (cutoff=b"1111") then
+                    cutoff<=b"0000";
+                else
+                    cutoff <= cutoff + 1;
+                end if;
             end if;
         end if;
     end process;

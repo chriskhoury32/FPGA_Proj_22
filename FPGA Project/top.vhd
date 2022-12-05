@@ -6,13 +6,14 @@ use UNISIM.vcomponents.all;
 
 entity top is
     port(
-        clk: in std_logic;                        --system clock (12 mhz)
-        btn: in  std_logic_vector(1 downto 0);    --buttons
+        clk:   in std_logic;                        --system clock (12 mhz)
+        btn:   in  std_logic_vector(1 downto 0);    --buttons
         mclk:  out std_logic_vector(1 downto 0);  --master clock
         sclk:  out std_logic_vector(1 downto 0);  --serial clock (or bit clock)
         ws:    out std_logic_vector(1 downto 0);  --word select (or left-right clock)
         sd_rx: in  std_logic;                     --serial data in
-        sd_tx: out std_logic                      --serial data out
+        sd_tx: out std_logic;                      --serial data out
+		led:   out std_logic_vector(3 downto 0)
     );
 end top;
 
@@ -42,6 +43,7 @@ architecture arch of top is
             cutoff_btn:   in  std_logic;
             s_trig:   in std_logic; --trigger to start filtering
             uf_audio: in signed(23 downto 0);  --unfiltered audio to write to RAM
+            cutoff_leds: out std_logic_vector(3 downto 0);
             f_audio:  out signed(23 downto 0); --filtered audio signal value
             f_trig:   out std_logic --trigger to indicate the filtering is finished
         );
@@ -75,11 +77,11 @@ begin
     );
     r_filt: filter port map(
         clk=>clkf, toggle_btn=>btn0, cutoff_btn=>btn1, s_trig=>s_trig, 
-        uf_audio=>r_uf_audio,f_audio=>r_f_audio, f_trig=>open
+        uf_audio=>r_uf_audio, cutoff_leds=>led, f_audio=>r_f_audio, f_trig=>open
     );
     l_filt: filter port map(
         clk=>clkf, toggle_btn=>btn0, cutoff_btn=>btn1, s_trig=>s_trig, 
-        uf_audio=>l_uf_audio,f_audio=>l_f_audio, f_trig=>open
+        uf_audio=>l_uf_audio, cutoff_leds=>open, f_audio=>l_f_audio, f_trig=>open
     );
 
     r_uf_audio <= signed(r_audio_i(3));
