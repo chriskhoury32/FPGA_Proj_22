@@ -1,26 +1,4 @@
---------------------------------------------------------------------------------
---
---   filename:         i2s_transceiver.vhd
---   dependencies:     none
---   design software:  quartus prime version 17.0.0 build 595 sj lite edition
---
---   hdl code is provided "as is."  digi-key expressly disclaims any
---   warranty of any kind, whether express or implied, including but not
---   limited to, the implied warranties of merchantability, fitness for a
---   particular purpose, or non-infringement. in no event shall digi-key
---   be liable for any incidental, special, indirect or consequential
---   damages, lost profits or lost data, harm to your equipment, cost of
---   procurement of substitute goods, technology or services, any claims
---   by third parties (including but not limited to any defense thereof),
---   any claims for indemnity or contribution, or other similar costs.
---
---   version history
---   version 1.0 03/29/2019 scott larson
---     initial public release
--- 
---------------------------------------------------------------------------------
-
-library ieee;
+ibrary ieee;
 use ieee.std_logic_1164.all;
 
 entity i2s_transceiver is

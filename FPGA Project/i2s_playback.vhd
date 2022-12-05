@@ -1,25 +1,3 @@
---------------------------------------------------------------------------------
---
---   filename:         i2s_playback.vhd
---   dependencies:     i2s_transceiver.vhd, clk_wiz_0 (pll)
---   design software:  vivado v2017.2
---
---   hdl code is provided "as is."  digi-key expressly disclaims any
---   warranty of any kind, whether express or implied, including but not
---   limited to, the implied warranties of merchantability, fitness for a
---   particular purpose, or non-infringement. in no event shall digi-key
---   be liable for any incidental, special, indirect or consequential
---   damages, lost profits or lost data, harm to your equipment, cost of
---   procurement of substitute goods, technology or services, any claims
---   by third parties (including but not limited to any defense thereof),
---   any claims for indemnity or contribution, or other similar costs.
---
---   version history
---   version 1.0 04/19/2019 scott larson
---     initial public release
--- 
---------------------------------------------------------------------------------
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
