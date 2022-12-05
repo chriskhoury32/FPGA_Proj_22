@@ -52,8 +52,8 @@ signal knob_val:        unsigned(3 downto 0);
 signal coeff:           signed(17 downto 0);    -- value of FIR coefficient
 signal coeff_addr:      unsigned(9 downto 0);   -- address of coefficient RAM
 signal uf_audio_r:      signed(23 downto 0);    -- value of unfiltered audio (read)
---signal fir_sum:         signed(41 downto 0);
-signal fir_sum:         signed(23 downto 0);
+signal fir_sum:         signed(41 downto 0);
+--signal fir_sum:         signed(23 downto 0);
 
 constant samples: natural:=1024;
 signal addra: std_logic_vector(9 downto 0);
@@ -102,8 +102,8 @@ begin
                 web_s<='0';
                 if (coeff_addr=samples-1)
                 then
-                    --fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
-                    fir_sum<=uf_audio_r;
+                    fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
+                    --fir_sum<=uf_audio_r;
                     filter_state<=filter_end;
                     if (start_addr=to_unsigned(samples-1,10))
                     then
@@ -114,20 +114,20 @@ begin
                 elsif (uf_addr=to_unsigned(samples-1,10)) 
                 then
                     uf_addr<=b"00_0000_0000";
-                    --fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
-                    fir_sum<=uf_audio_r;
+                    fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
+                    --fir_sum<=uf_audio_r;
                     coeff_addr<=coeff_addr+1;
                 else
                     uf_addr<=uf_addr+1;
-                    --fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
-                    fir_sum<=uf_audio_r;
+                    fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
+                    --fir_sum<=uf_audio_r;
                     coeff_addr<=coeff_addr+1;
                 end if;
             when filter_end =>
                 filter_state<=filter_idle;
                 f_trig<='1';
-                --f_audio<=fir_sum(37 downto 14);
-                f_audio<=fir_sum;
+                f_audio<=fir_sum(37 downto 14);
+                --f_audio<=fir_sum;
         end case;
     end if;
 end process;
