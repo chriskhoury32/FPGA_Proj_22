@@ -1,4 +1,4 @@
-ibrary ieee;
+library ieee;
 use ieee.std_logic_1164.all;
 
 entity i2s_transceiver is

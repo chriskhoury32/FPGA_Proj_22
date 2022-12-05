@@ -37,9 +37,9 @@ begin
     begin
         if rising_edge(clk) then
             if pass_bit = '1' then
-                rgb_led<=b"110"; --highpass = yellow
+                rgb_led<=b"110"; --highpass = red
             else
-                rgb_led<=b"101"; --lowpass = purple
+                rgb_led<=b"101"; --lowpass = green
             end if;
             if pass_toggle = '1' then
                 pass_bit <= not pass_bit;
