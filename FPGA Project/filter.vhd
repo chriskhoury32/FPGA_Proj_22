@@ -50,7 +50,7 @@ signal knob_val:        unsigned(3 downto 0);
 signal coeff:           signed(17 downto 0);    -- value of FIR coefficient
 signal coeff_addr:      unsigned(9 downto 0);   -- address of coefficient RAM
 signal uf_audio_r:      signed(23 downto 0);    -- value of unfiltered audio (read)
-signal fir_sum:         signed(51 downto 0);
+signal fir_sum:         signed(41 downto 0);
 
 constant samples: natural:=1024;
 signal addra: std_logic_vector(9 downto 0);
@@ -86,7 +86,7 @@ begin
                 if (s_trig='1')
                 then
                     coeff_addr<=b"00_0000_0000";
-                    fir_sum<=to_signed(0,52);
+                    fir_sum<=to_signed(0,42);
                     filter_state<=filter_write;
                 else
                     filter_state<=filter_idle;
@@ -103,7 +103,7 @@ begin
                     coeff_addr<=b"00_0000_0000";
                 elsif (uf_addr=start_addr-1)
                 then
-                    fir_sum<=signed(b"00_0000_0000"&(coeff * uf_audio_r)) + fir_sum;
+                    fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
                     filter_state<=filter_end;
                     if (start_addr=to_unsigned(samples-1,10))
                     then
@@ -113,7 +113,7 @@ begin
                     end if;
                 else
                     uf_addr<=uf_addr+1;
-                    fir_sum<=signed(b"00_0000_0000"&(coeff * uf_audio_r)) + fir_sum;
+                    fir_sum<=signed(coeff * uf_audio_r) + fir_sum;
                     coeff_addr<=coeff_addr+1;
                     filter_state<=filter_read;
                 end if;
