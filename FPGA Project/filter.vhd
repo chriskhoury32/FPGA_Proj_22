@@ -25,7 +25,7 @@ architecture arch of filter is
             pass_toggle:  in  std_logic;
             cutoff_inc:   in  std_logic;
             idx:          in  unsigned(9 downto 0);
-            rgb_led:      out (2 downto 0);
+            rgb_led:      out std_logic_vector(2 downto 0);
             cutoff_leds:  out std_logic_vector(3 downto 0);
             data:         out signed(17 downto 0)
         );
