@@ -9,6 +9,7 @@ entity filter_select is
         cutoff_inc:   in  std_logic;
         idx:          in  unsigned(9 downto 0);
         cutoff_leds:  out std_logic_vector(3 downto 0);
+        rgb_led:      out std_logic_vector(2 downto 0);
         data:         out signed(17 downto 0)
     );
 end filter_select;
@@ -35,6 +36,11 @@ begin
     process(clk)
     begin
         if rising_edge(clk) then
+            if pass_bit = '1' then
+                rgb_led<=b"110"; --highpass = yellow
+            else
+                rgb_led<=b"101"; --lowpass = purple
+            end if;
             if pass_toggle = '1' then
                 pass_bit <= not pass_bit;
             end if;

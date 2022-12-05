@@ -12,6 +12,7 @@ entity filter is
         s_trig:   in std_logic; --trigger to start filtering
         uf_audio: in signed(23 downto 0);  --unfiltered audio to write to RAM
         cutoff_leds: out std_logic_vector(3 downto 0);
+        rgb_led:  out std_logic_vector(2 downto 0);
         f_audio:  out signed(23 downto 0); --filtered audio signal value
         f_trig:   out std_logic --trigger to indicate the filtering is finished
     );
@@ -24,6 +25,7 @@ architecture arch of filter is
             pass_toggle:  in  std_logic;
             cutoff_inc:   in  std_logic;
             idx:          in  unsigned(9 downto 0);
+            rgb_led:      out (2 downto 0);
             cutoff_leds:  out std_logic_vector(3 downto 0);
             data:         out signed(17 downto 0)
         );
@@ -69,7 +71,7 @@ signal start_addr:  unsigned(9 downto 0):=b"00_0000_0000";
 
 begin
     fs: filter_select port map(clk=>clk,pass_toggle=>toggle_btn,cutoff_inc=>cutoff_btn,
-                                idx=>coeff_addr,cutoff_leds=>cutoff_leds,data=>coeff);
+                                idx=>coeff_addr,cutoff_leds=>cutoff_leds,rgb_led=>rgb_led,data=>coeff);
     ufa: unfiltered_audio port map(clka_i=>clk,wea_i=>'0',addra_i=>std_logic_vector(uf_addr),dataa_i=>(others=>'0'),
                                     dataa_o=>dataa,clkb_i=>clk,web_i=>web_s,addrb_i=>std_logic_vector(uf_addr),
                                     datab_i=>uf_audio_w,datab_o=>open);
