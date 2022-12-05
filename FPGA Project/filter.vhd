@@ -5,7 +5,6 @@ library UNISIM;
 use UNISIM.vcomponents.all;
 
 entity filter is
-    -- generic (    );
     port (
         clk:      in std_logic; --input clock
         toggle_btn:  in  std_logic;
@@ -67,7 +66,7 @@ signal start_addr:  unsigned(9 downto 0):=b"00_0000_0000";
 
 begin
     fs: filter_select port map(clk=>clk,pass_toggle=>toggle_btn,cutoff_inc=>cutoff_btn,
-                                knob_val=>knob_val,idx=>coeff_addr,data=>coeff);
+                                idx=>coeff_addr,data=>coeff);
     ufa: unfiltered_audio port map(clka_i=>clk,wea_i=>'0',addra_i=>std_logic_vector(uf_addr),dataa_i=>(others=>'0'),
                                     dataa_o=>dataa,clkb_i=>clk,web_i=>web_s,addrb_i=>std_logic_vector(uf_addr),
                                     datab_i=>uf_audio_w,datab_o=>open);

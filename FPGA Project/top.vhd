@@ -35,8 +35,10 @@ architecture arch of top is
     component filter
         port (
             clk:      in std_logic; --input clock
+            toggle_btn:  in  std_logic;
+            cutoff_btn:   in  std_logic;
             s_trig:   in std_logic; --trigger to start filtering
-            uf_audio: in  signed(23 downto 0);
+            uf_audio: in signed(23 downto 0);  --unfiltered audio to write to RAM
             f_audio:  out signed(23 downto 0); --filtered audio signal value
             f_trig:   out std_logic --trigger to indicate the filtering is finished
         );
@@ -47,8 +49,10 @@ architecture arch of top is
     signal clkf:    std_logic;
     signal clkfb:   std_logic;
     signal counter: unsigned(10 downto 0);
-    signal btn0_tmp:   std_logic_vector(3 downto 0);
-    signal btn1_tmp:   std_logic_vector(3 downto 0);
+    signal btn0_temp:   std_logic_vector(3 downto 0);
+    signal btn1_temp:   std_logic_vector(3 downto 0);
+    signal btn1:       std_logic;
+    signal btn0:       std_logic;
 
     signal s_trig:     std_logic := '0';
     signal r_audio_i:  std_logic_vector(23 downto 0);
