@@ -120,7 +120,7 @@ begin
             when filter_end =>
                 filter_state<=filter_idle;
                 f_trig<='1';
-                f_audio<=fir_sum(fir_sum'high downto fir_sum'high-23);
+                f_audio<=fir_sum(37 downto 14);
         end case;
     end if;
 end process;

@@ -108,7 +108,7 @@ begin
     process(clkf)
     begin
         if rising_edge(clkf) then
-            if counter = to_unsigned(2000-1, counter'length) then
+            if counter = to_unsigned(1048-1, counter'length) then
                 counter <= to_unsigned(0, counter'length);
                 s_trig <= '1';
             else
@@ -131,7 +131,7 @@ begin
 		-- JITTER PROGRAMMING (OPTIMIZED, HIGH, LOW)
 		BANDWIDTH=>"OPTIMIZED",
 		-- MULTIPLY VALUE FOR ALL CLKOUT (2.000-64.000).
-		CLKFBOUT_MULT_F=>55.125,
+		CLKFBOUT_MULT_F=>52.000,
 		-- PHASE OFFSET IN DEGREES OF CLKFB (-360.000-360.000).
 		CLKFBOUT_PHASE=>0.0,
 		-- INPUT CLOCK PERIOD IN NS TO PS RESOLUTION (I.E. 33.333 IS 30 MHZ).
@@ -144,7 +144,7 @@ begin
 		CLKOUT5_DIVIDE=>1,
 		CLKOUT6_DIVIDE=>1,
 		-- DIVIDE AMOUNT FOR CLKOUT0 (1.000-128.000):
-		CLKOUT0_DIVIDE_F=>7.500,
+		CLKOUT0_DIVIDE_F=>13.500,
 		-- DUTY CYCLE FOR EACH CLKOUT (0.01-0.99):
 		CLKOUT0_DUTY_CYCLE=>0.5,
 		CLKOUT1_DUTY_CYCLE=>0.5,
