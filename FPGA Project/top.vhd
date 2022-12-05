@@ -68,7 +68,7 @@ architecture arch of top is
     signal l_f_audio:  signed(23 downto 0);
 begin
     playback: i2s_playback port map(
-        clk=>clkf, mclk=>mclk, sclk=>sclk,
+        clk=>clk, mclk=>mclk, sclk=>sclk,
         ws=>ws, sd_rx=>sd_rx, sd_tx=>sd_tx,
         r_data_i=>r_audio_i(0), l_data_i=>l_audio_i(0),
         r_data_o=>r_audio_o, l_data_o=>l_audio_o
@@ -79,7 +79,7 @@ begin
     );
     l_filt: filter port map(
         clk=>clkf, toggle_btn=>btn0, cutoff_btn=>btn1, s_trig=>s_trig, 
-        uf_audio=>r_uf_audio,f_audio=>r_f_audio, f_trig=>open
+        uf_audio=>l_uf_audio,f_audio=>l_f_audio, f_trig=>open
     );
 
     r_uf_audio <= signed(r_audio_i(3));
@@ -88,9 +88,9 @@ begin
     l_uf_audio <= signed(l_audio_i(3));
     l_audio_o <= std_logic_vector(l_f_audio);
 
-    process(clk)
+    process(clkf)
     begin
-        if rising_edge(clk) then
+        if rising_edge(clkf) then
 			btn0<=btn0_temp(2) and (not btn0_temp(3));
 			btn0_temp(0)<=btn(0);
 			btn0_temp(1)<=btn0_temp(0);
