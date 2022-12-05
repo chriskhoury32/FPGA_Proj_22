@@ -18,6 +18,9 @@ end top;
 
 architecture arch of top is
     component i2s_playback
+        generic(
+            d_width: integer := 24
+        );
         port(
             clk:   in  std_logic;                     --system clock (12 mhz)
             mclk:  out std_logic_vector(1 downto 0);  --master clock
@@ -26,10 +29,10 @@ architecture arch of top is
             sd_rx: in  std_logic;                     --serial data in
             sd_tx: out std_logic;                     --serial data out
 
-            r_data_i: in  std_logic_vector(23 downto 0);
-            l_data_i: in  std_logic_vector(23 downto 0);
-            r_data_o: out std_logic_vector(23 downto 0);
-            l_data_o: out std_logic_vector(23 downto 0)
+            r_data_o: in  std_logic_vector(d_width-1 downto 0);
+            l_data_o: in  std_logic_vector(d_width-1 downto 0);
+            r_data_i: out std_logic_vector(d_width-1 downto 0);
+            l_data_i: out std_logic_vector(d_width-1 downto 0)
         );
     end component;
     component filter
@@ -55,10 +58,10 @@ architecture arch of top is
     signal btn0:       std_logic;
 
     signal s_trig:     std_logic := '0';
-    signal r_audio_i:  std_logic_vector(23 downto 0);
-    signal l_audio_i:  std_logic_vector(23 downto 0);
-    signal r_audio_o:  synchronizer;
-    signal l_audio_o:  synchronizer;
+    signal r_audio_i:  synchronizer;
+    signal l_audio_i:  synchronizer;
+    signal r_audio_o:  std_logic_vector(23 downto 0);
+    signal l_audio_o:  std_logic_vector(23 downto 0);
     signal r_uf_audio: signed(23 downto 0);
     signal l_uf_audio: signed(23 downto 0);
     signal r_f_audio:  signed(23 downto 0);
@@ -67,8 +70,8 @@ begin
     playback: i2s_playback port map(
         clk=>clkf, mclk=>mclk, sclk=>sclk,
         ws=>ws, sd_rx=>sd_rx, sd_tx=>sd_tx,
-        r_data_i=>r_audio_i, l_data_i=>l_audio_i,
-        r_data_o=>r_audio_o(3), l_data_o=>l_audio_o(3)
+        r_data_i=>r_audio_i(0), l_data_i=>l_audio_i(0),
+        r_data_o=>r_audio_o, l_data_o=>l_audio_o
     );
     r_filt: filter port map(
         clk=>clkf, toggle_btn=>btn0, cutoff_btn=>btn1, s_trig=>s_trig, 
@@ -79,11 +82,11 @@ begin
         uf_audio=>r_uf_audio,f_audio=>r_f_audio, f_trig=>open
     );
 
-    r_uf_audio <= signed(r_audio_i);
-    r_audio_o(0) <= std_logic_vector(r_f_audio);
+    r_uf_audio <= signed(r_audio_i(3));
+    r_audio_o <= std_logic_vector(r_f_audio);
 
-    l_uf_audio <= signed(l_audio_i);
-    l_audio_o(0) <= std_logic_vector(l_f_audio);
+    l_uf_audio <= signed(l_audio_i(3));
+    l_audio_o <= std_logic_vector(l_f_audio);
 
     process(clk)
     begin
@@ -102,7 +105,7 @@ begin
         end if;
     end process;
 
-    process(clk)
+    process(clkf)
     begin
         if rising_edge(clkf) then
             if counter = to_unsigned(2000-1, counter'length) then
@@ -118,8 +121,8 @@ begin
     process(clk)
     begin
         if rising_edge(clkf) then
-            r_audio_o(1 to 3) <= r_audio_o(0 to 2);
-            l_audio_o(1 to 3) <= l_audio_o(0 to 2);
+            r_audio_i(1 to 3) <= r_audio_i(0 to 2);
+            l_audio_i(1 to 3) <= l_audio_i(0 to 2);
         end if;
     end process;
 

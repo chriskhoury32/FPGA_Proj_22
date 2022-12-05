@@ -37,10 +37,10 @@ entity i2s_playback is
         sd_rx       :  in  std_logic;                     --serial data in
         sd_tx       :  out std_logic;                      --serial data out
 
-		r_data_i: in  std_logic_vector(d_width-1 downto 0);
-		l_data_i: in  std_logic_vector(d_width-1 downto 0);
-		r_data_o: out std_logic_vector(d_width-1 downto 0);
-		l_data_o: out std_logic_vector(d_width-1 downto 0)
+		r_data_o: in  std_logic_vector(d_width-1 downto 0);
+		l_data_o: in  std_logic_vector(d_width-1 downto 0);
+		r_data_i: out std_logic_vector(d_width-1 downto 0);
+		l_data_i: out std_logic_vector(d_width-1 downto 0)
 	);
 end i2s_playback;
 
@@ -55,10 +55,10 @@ architecture logic of i2s_playback is
     signal r_data_tx    :  std_logic_vector(d_width-1 downto 0);  --right channel data to transmit using i2s transceiver component
 	signal reset_n		:  std_logic:='1';
 
-	type r_audio_i_d is array(0 to 2) of std_logic_vector(d_width-1 downto 0);
-	type l_audio_i_d is array(0 to 2) of std_logic_vector(d_width-1 downto 0);
-	signal r_data_i_d: r_audio_i_d;
-	signal l_data_i_d: l_audio_i_d;
+	type r_audio_o_d is array(0 to 2) of std_logic_vector(d_width-1 downto 0);
+	type l_audio_o_d is array(0 to 2) of std_logic_vector(d_width-1 downto 0);
+	signal r_data_o_d: r_audio_o_d;
+	signal l_data_o_d: l_audio_o_d;
 
     --declare i2s transceiver component
     component i2s_transceiver is
@@ -177,19 +177,19 @@ begin
     ws(0) <= word_select;   --output word select (from i2s transceiver) to adc
     ws(1) <= word_select;   --output word select (from i2s transceiver) to dac
 
-    r_data_o <= r_data_rx;  --assign right channel received data to transmit (to playback out received data)
-    l_data_o <= l_data_rx;  --assign left channel received data to transmit (to playback out received data)
+    r_data_i <= r_data_rx;  --assign right channel received data to transmit (to playback out received data)
+    l_data_i <= l_data_rx;  --assign left channel received data to transmit (to playback out received data)
 
 	process(master_clk)
 	begin
 		if rising_edge(master_clk) then
-			r_data_i_d(0) <= r_data_i;
-			r_data_i_d(1 to 2) <= r_data_i_d(0 to 1);
-			r_data_tx <= r_data_i_d(2);
+			r_data_o_d(0) <= r_data_o;
+			r_data_o_d(1 to 2) <= r_data_o_d(0 to 1);
+			r_data_tx <= r_data_o_d(2);
 
-			l_data_i_d(0) <= l_data_i;
-			l_data_i_d(1 to 2) <= l_data_i_d(0 to 1);
-			l_data_tx <= l_data_i_d(2);
+			l_data_o_d(0) <= l_data_o;
+			l_data_o_d(1 to 2) <= l_data_o_d(0 to 1);
+			l_data_tx <= l_data_o_d(2);
 		end if;
 	end process;
 end logic;
